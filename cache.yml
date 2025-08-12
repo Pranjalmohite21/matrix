@@ -1,0 +1,28 @@
+name: Full Node.js CI Pipeline
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:  # For manual triggers (used in assignment 4)
+
+jobs:
+  # 1. Node.js install with caching
+  install_dependencies:
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache-node-modules.outputs.cache-hit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
