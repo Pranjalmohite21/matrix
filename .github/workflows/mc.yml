@@ -1,0 +1,25 @@
+test_matrix:
+    needs: install_dependencies
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [16, 18, 20]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Extra security scan (Ubuntu + Node 18 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == 18
+        run: npm run security-scan
