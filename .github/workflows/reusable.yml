@@ -1,36 +1,46 @@
-name: Node.js CI
+name: Test Compatibility
 
 on:
   push:
-    branches:
-      - main
+  pull_request:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  test_compatibility:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - node_version: "16"
-            run_lint: true
-          - node_version: "18"
-            run_lint: false
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.8, 3.9, 3.10, 3.11]
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node_version }}
+          node-version: 18
 
-      - name: Install Dependencies
+      - name: Install npm dependencies
         run: npm install
+        working-directory: ./
 
-      - name: Run Tests
-        run: npm test
+      - name: Run npm build
+        run: npm run build
+        working-directory: ./
 
-      - name: Run Lint
-        if: ${{ matrix.run_lint }}
-        run: npm run lint
+      - name: Run tests
+        run: pytest
